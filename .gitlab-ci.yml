@@ -1,0 +1,87 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  NAME: notes-data-service
+
+build-dev:
+  stage: build
+  variables:
+    SERVICE_ACCOUNT: $DEV_GCP_DEPLOY_SERVICE_ACCOUNT
+    PROJECT_ID: soundheart-dev-94cc1
+  before_script:
+    - echo $SERVICE_ACCOUNT | base64 --decode >> key.json
+    - gcloud auth activate-service-account --key-file key.json
+    - gcloud config set project $PROJECT_ID
+  script:
+    - gcloud builds submit --tag gcr.io/$PROJECT_ID/$NAME
+  only:
+    - main
+  tags:
+    - kubernetes
+
+build-cvi:
+  stage: build
+  variables:
+    SERVICE_ACCOUNT: $SOUNDHEART_QA_GCP_DEPLOY_SERVICE_ACCOUNT
+    PROJECT_ID: soundheart-qa-4685e
+  before_script:
+    - echo $SERVICE_ACCOUNT | base64 --decode >> key.json
+    - gcloud auth activate-service-account --key-file key.json
+    - gcloud config set project $PROJECT_ID
+  script:
+    - gcloud builds submit --tag gcr.io/$PROJECT_ID/$NAME
+  when: manual
+  environment:
+    name: cvi
+  tags:
+    - kubernetes
+
+deploy-dev:
+  stage: deploy
+  variables:
+    SERVICE_ACCOUNT: $DEV_GCP_DEPLOY_SERVICE_ACCOUNT
+    PROJECT_ID: soundheart-dev-94cc1
+    SECRET_YAML: $SERVICES_SECRET_DEV_YAML
+  before_script:
+    - echo $SERVICE_ACCOUNT | base64 --decode >> key.json
+    - gcloud auth activate-service-account --key-file key.json
+    - gcloud config set project $PROJECT_ID
+    - echo $SECRET_YAML | base64 --decode >> k8s/secret.yaml
+    - gcloud container clusters get-credentials event-driven-cluster --zone us-central1-c --project $PROJECT_ID
+  script:
+    - kubectl apply -f k8s/secret.yaml
+    - kubectl apply -f k8s/deployment.yaml
+    - kubectl set image deployment/notes-data-deployment notes-data=gcr.io/$PROJECT_ID/$NAME:latest
+    - kubectl describe deployment notes-data-deployment
+    - kubectl rollout restart deployment notes-data-deployment
+  needs:
+    - build-dev
+  only:
+    - main
+  tags:
+    - kubernetes
+
+deploy-cvi:
+  stage: deploy
+  variables:
+    SERVICE_ACCOUNT: $SOUNDHEART_QA_GCP_DEPLOY_SERVICE_ACCOUNT
+    PROJECT_ID: soundheart-qa-4685e
+    SECRET_YAML: $SERVICES_SECRET_CVI_YAML
+  before_script:
+    - echo $SERVICE_ACCOUNT | base64 --decode >> key.json
+    - gcloud auth activate-service-account --key-file key.json
+    - gcloud config set project $PROJECT_ID
+    - echo $SECRET_YAML | base64 --decode >> k8s/secret.yaml
+    - gcloud container clusters get-credentials cluster-1 --zone us-central1-c --project $PROJECT_ID
+  script:
+    - kubectl apply -f k8s/secret.yaml
+    - kubectl apply -f k8s/deployment.yaml
+    - kubectl set image deployment/notes-data-deployment notes-data=gcr.io/$PROJECT_ID/$NAME:latest
+    - kubectl describe deployment notes-data-deployment
+    - kubectl rollout restart deployment notes-data-deployment
+  needs:
+    - build-cvi
+  tags:
+    - kubernetes

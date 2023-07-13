@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: waitlist-data-deployment
+  labels:
+    app: waitlist-data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: waitlist-data
+  template:
+    metadata:
+      labels:
+        app: waitlist-data
+    spec:
+      containers:
+        - name: waitlist-data
+          image: waitlist-data-service:latest
+          ports:
+            - containerPort: 8088
+          env:
+            - name: NATS
+              valueFrom:
+                secretKeyRef:
+                  name: services-secret
+                  key: nats-url
+            - name: KAFKA
+              valueFrom:
+                secretKeyRef:
+                  name: services-secret
+                  key: kafka-url
