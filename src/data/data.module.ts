@@ -3,9 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DataService } from './data.service';
 
 @Module({
-  imports: [
-    ConfigModule
-  ],
+  imports: [ConfigModule],
   providers: [DataService],
   exports: [DataService],
 })

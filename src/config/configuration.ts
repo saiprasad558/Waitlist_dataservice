@@ -4,7 +4,7 @@ export default () => ({
     server: process.env.NATS || 'nats://localhost:4222',
     queues: {
       pushNotifications: 'push-notifications-rest-service',
-    }
+    },
   },
   kafka: {
     clientId: 'my-app',

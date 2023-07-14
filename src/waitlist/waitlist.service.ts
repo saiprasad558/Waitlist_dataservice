@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataService } from 'src/data/data.service';
 
-
 @Injectable()
 export class WaitListService {
   findAll(query: { patientId?: string; doctorId?: string }) {
@@ -17,10 +16,4 @@ export class WaitListService {
   findOne(id: number) {
     return DataService.waitlist[id];
   }
-
-
- 
-
-
-
 }

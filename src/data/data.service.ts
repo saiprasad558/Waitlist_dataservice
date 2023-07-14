@@ -34,9 +34,7 @@ export class DataService {
   static waitlist: Record<string, WaitListEntity> = {};
   static appointment: Record<string, WaitListEntity> = {};
 
-  constructor(
-    private readonly _configService: ConfigService
-  ) {
+  constructor(private readonly _configService: ConfigService) {
     this.kafka = new Kafka({
       clientId: this._configService.get<string>('kafka.clientId'),
       brokers: this._configService.get<string[]>('kafka.brokers'),
@@ -52,17 +50,19 @@ export class DataService {
           date: new Date(new Date().setHours(0, 0, 0, 0)),
         });
         if (isAppointmentAvailable) {
-          notification({ 
-          uId: waitlist.patientId,
-          message: 'Appointment Available',
-          title: 'Appointment Available',
-          data: {
-            doctorId: waitlist.doctorId,
-            date: new Date(new Date().setHours(0, 0, 0, 0)),
-          },
-          createdAt: new Date().toISOString(),
-          type: 'appointment',}).then((data) => console.log(data)).catch((err) => console.log(err));
-
+          notification({
+            uId: waitlist.patientId,
+            message: 'Appointment Available',
+            title: 'Appointment Available',
+            data: {
+              doctorId: waitlist.doctorId,
+              date: new Date(new Date().setHours(0, 0, 0, 0)),
+            },
+            createdAt: new Date().toISOString(),
+            type: 'appointment',
+          })
+            .then((data) => console.log(data))
+            .catch((err) => console.log(err));
         }
       });
     console.log({ waitlist });
