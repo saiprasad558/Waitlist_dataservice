@@ -42,46 +42,52 @@ export class DataService {
   }
 
   async loadAppointment() {
+    console.log('loadAppointment');
     const waitlist = Object.values(DataService.waitlist)
       .filter((waitlist) => waitlist.isExist)
       .map((waitlist) => {
-        const isAppointmentAvailable = this.findSlots({
+        const {doctorName,isAvailable} = this.findSlots({
           doctorId: waitlist.doctorId,
           date: new Date(new Date().setHours(0, 0, 0, 0)),
         });
-        if (isAppointmentAvailable) {
+        if (isAvailable) {
           notification({
             uId: waitlist.patientId,
-            message: 'Appointment Available',
-            title: 'Appointment Available',
+            message: `Dr. ${doctorName} has this date ${
+              new Date().toISOString().split('T')[0]
+            }  available for an appointment. Do you want to book this slot?`,
+            title: `Available Time slot for Dr.  ${doctorName}`,
             data: {
               doctorId: waitlist.doctorId,
               date: new Date(new Date().setHours(0, 0, 0, 0)),
             },
             createdAt: new Date().toISOString(),
-            type: 'appointment',
+            type: 'appointment-waitlist',
           })
             .then((data) => console.log(data))
             .catch((err) => console.log(err));
         }
       });
-    console.log({ waitlist });
   }
 
   findSlots(query: { doctorId?: string; date?: Date }) {
     const { date, doctorId } = query;
 
-    const doctorslots = Object.values(DataService.appointment)
-      .filter(
-        (appointment) =>
-          appointment.doctorId === doctorId &&
-          appointment.appointmentDate === date.toISOString().split('T')[0],
-      )
-      .map((slot) => slot.slotTime);
+    const doctorsAppointments = Object.values(DataService.appointment).filter(
+      (appointment) =>
+        appointment.doctorId === doctorId &&
+        appointment.appointmentDate === date.toISOString().split('T')[0],
+    );
+    const doctorslots = doctorsAppointments.map((slot) => slot.slotTime);
     const appointmentavaialbilty = slots.filter(
       (slot) => !doctorslots.includes(slot),
     );
-    return appointmentavaialbilty.length > 0;
+    const doctorName = doctorsAppointments.map((slot) => slot.doctorName)[0];
+
+    return {
+      doctorName,
+      isAvailable: appointmentavaialbilty.length > 0,
+    };
   }
   async loadData() {
     await this.loadWaitList();
