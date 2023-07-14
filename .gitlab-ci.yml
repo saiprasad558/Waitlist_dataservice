@@ -3,7 +3,7 @@ stages:
   - deploy
 
 variables:
-  NAME: notes-data-service
+  NAME: waitlist-data-service
 
 build-dev:
   stage: build
@@ -53,9 +53,9 @@ deploy-dev:
   script:
     - kubectl apply -f k8s/secret.yaml
     - kubectl apply -f k8s/deployment.yaml
-    - kubectl set image deployment/notes-data-deployment notes-data=gcr.io/$PROJECT_ID/$NAME:latest
-    - kubectl describe deployment notes-data-deployment
-    - kubectl rollout restart deployment notes-data-deployment
+    - kubectl set image deployment/waitlist-data-deployment waitlist-data=gcr.io/$PROJECT_ID/$NAME:latest
+    - kubectl describe deployment waitlist-data-deployment
+    - kubectl rollout restart deployment waitlist-data-deployment
   needs:
     - build-dev
   only:
@@ -78,9 +78,9 @@ deploy-cvi:
   script:
     - kubectl apply -f k8s/secret.yaml
     - kubectl apply -f k8s/deployment.yaml
-    - kubectl set image deployment/notes-data-deployment notes-data=gcr.io/$PROJECT_ID/$NAME:latest
-    - kubectl describe deployment notes-data-deployment
-    - kubectl rollout restart deployment notes-data-deployment
+    - kubectl set image deployment/waitlist-data-deployment waitlist-data=gcr.io/$PROJECT_ID/$NAME:latest
+    - kubectl describe deployment waitlist-data-deployment
+    - kubectl rollout restart deployment waitlist-data-deployment
   needs:
     - build-cvi
   tags:
