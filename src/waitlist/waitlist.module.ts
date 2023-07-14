@@ -3,9 +3,11 @@ import { WaitListService } from './waitlist.service';
 import { NotesController } from './waitlist.controller';
 import { DataService } from 'src/data/data.service';
 import { ConfigService } from '@nestjs/config';
+import { DataModule } from 'src/data/data.module';
 
 @Module({
+  imports: [DataModule],
   controllers: [NotesController],
-  providers: [WaitListService, DataService, ConfigService],
+  providers: [WaitListService],
 })
 export class WaitListModule {}

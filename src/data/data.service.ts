@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Kafka } from 'kafkajs';
 import { WaitListEntity } from './enities';
 import { ConfigService } from '@nestjs/config';
+import { ClientNats } from '@nestjs/microservices';
+import { notification } from 'src/notify';
 const slots = [
   '09:30-09:50',
   '09:50-10:10',
@@ -32,7 +34,9 @@ export class DataService {
   static waitlist: Record<string, WaitListEntity> = {};
   static appointment: Record<string, WaitListEntity> = {};
 
-  constructor(private readonly _configService: ConfigService) {
+  constructor(
+    private readonly _configService: ConfigService
+  ) {
     this.kafka = new Kafka({
       clientId: this._configService.get<string>('kafka.clientId'),
       brokers: this._configService.get<string[]>('kafka.brokers'),
@@ -40,16 +44,25 @@ export class DataService {
   }
 
   async loadAppointment() {
-    const waitlist =  Object.values(DataService.waitlist)
+    const waitlist = Object.values(DataService.waitlist)
       .filter((waitlist) => waitlist.isExist)
-      .map( (waitlist) => {
-        const isAppointmentAvailable =  this.findSlots({
+      .map((waitlist) => {
+        const isAppointmentAvailable = this.findSlots({
           doctorId: waitlist.doctorId,
           date: new Date(new Date().setHours(0, 0, 0, 0)),
         });
-        console.log({ isAppointmentAvailable });
         if (isAppointmentAvailable) {
-          return waitlist;
+          notification({ 
+          uId: waitlist.patientId,
+          message: 'Appointment Available',
+          title: 'Appointment Available',
+          data: {
+            doctorId: waitlist.doctorId,
+            date: new Date(new Date().setHours(0, 0, 0, 0)),
+          },
+          createdAt: new Date().toISOString(),
+          type: 'appointment',}).then((data) => console.log(data)).catch((err) => console.log(err));
+
         }
       });
     console.log({ waitlist });
