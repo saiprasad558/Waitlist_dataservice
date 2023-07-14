@@ -19,7 +19,7 @@ async function bootstrap() {
   await app.listen();
 
   console.log('Microservice is listening');
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('0 0 * * *', async () => {
     await dataService.loadAppointment();
     console.log('Waitlist is queued');
   });
